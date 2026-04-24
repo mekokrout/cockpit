@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Daily Cockpit">
+<title>Meko Daily Cockpit</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cr:#f5efe6;--cr2:#ece2d3;--cd:#fdfbf6;
+  --ink:#2a1f17;--ink2:#4a3a2a;--ink3:#6b5d4f;--ink4:#a89680;
+  --tr:#b8512f;--tr2:#a03a1f;--sg:#3d4a3a;--tl:#2f6b6b;
+  --gd:#8a6b2f;--pl:#6b4a7a;--bd:#e0d4c0;--bd2:#d4c5ae
+}
+html,body{min-height:100%;background:linear-gradient(180deg,var(--cr),var(--cr2));font-family:"Cormorant Garamond",Georgia,serif;color:var(--ink)}
+.w{max-width:1200px;margin:0 auto;padding:22px 16px}
+.card{background:var(--cd);border:1px solid var(--bd);border-radius:3px;padding:20px}
+input,select,textarea{font-family:"Inter",sans-serif;font-size:13px;background:var(--cd);border:1px solid var(--bd2);border-radius:2px;padding:8px 10px;color:var(--ink);outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--tr)}
+textarea{resize:none;line-height:1.5}
+select{cursor:pointer;width:auto}
+.btn{font-family:"Inter",sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;background:var(--ink);color:var(--cd);padding:8px 14px;border:none;border-radius:2px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--tr)}
+.btn:disabled{opacity:.6;cursor:default}
+.bg{background:transparent;color:var(--ink3);border:1px solid var(--bd2);padding:7px 11px}
+.bsm{padding:5px 9px;font-size:10px}
+.bfw{width:100%;justify-content:center}
+.tab{font-family:"Inter",sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;background:transparent;color:var(--ink3);padding:7px 13px;border:none;border-radius:2px;cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--ink);color:var(--cd)}
+.lbl{font-family:"Inter",sans-serif;font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase}
+.hidden{display:none!important}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rb{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.f1{flex:1;min-width:0}
+.modal-bg{position:fixed;inset:0;z-index:100;background:rgba(42,31,23,.72);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-box{max-width:560px;width:100%;background:var(--cd);border:1px solid var(--bd);border-radius:3px;padding:32px;max-height:90vh;overflow-y:auto}
+.save-dot{width:7px;height:7px;border-radius:50%;display:inline-block;background:#4a7a4a}
+.save-dot.saving{background:var(--gd)}
+.div{height:1px;background:linear-gradient(90deg,transparent,rgba(184,81,47,.3),transparent);margin:14px 0}
+.sy{overflow-y:auto;max-height:240px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:7px 8px;font-family:"Inter",sans-serif;font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);border-bottom:2px solid var(--bd)}
+td{padding:8px 8px;border-bottom:1px solid #f5efe6;font-family:"Inter",sans-serif;font-size:12px;color:var(--ink2)}
+tfoot td{background:var(--cr);border-top:2px solid var(--bd);font-weight:600}
+@media(max-width:700px){.g3{grid-template-columns:1fr!important}.g2{grid-template-columns:1fr!important}.w{padding:14px}}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div id="modal-morning" class="modal-bg hidden">
+  <div class="modal-box" style="border-color:var(--tr)" id="morning-box"></div>
+</div>
+
+<div id="modal-evening" class="modal-bg hidden">
+  <div class="modal-box" style="border-color:var(--pl)">
+    <div class="lbl" style="color:var(--pl);margin-bottom:12px">&#127769; Evening Reflection</div>
+    <div style="font-size:1.6rem;margin-bottom:14px">How was today?</div>
+    <div style="margin-bottom:10px"><div class="lbl" style="color:var(--ink3);margin-bottom:5px">What moved?</div><textarea id="r-moved" rows="2" placeholder="Even small wins count..."></textarea></div>
+    <div style="margin-bottom:10px"><div class="lbl" style="color:var(--ink3);margin-bottom:5px">What stalled?</div><textarea id="r-stalled" rows="2" placeholder="Be kind to yourself..."></textarea></div>
+    <div style="margin-bottom:10px"><div class="lbl" style="color:var(--ink3);margin-bottom:5px">Tomorrow's one thing</div><textarea id="r-focus" rows="2" placeholder="If only one thing happens tomorrow..."></textarea></div>
+    <div style="margin-bottom:14px">
+      <div class="lbl" style="color:var(--ink3);margin-bottom:7px">How are you feeling?</div>
+      <div class="row">
+        <button class="btn bg ebtn" data-e="tired" onclick="pickE('tired')">tired</button>
+        <button class="btn bg ebtn" data-e="okay" onclick="pickE('okay')">okay</button>
+        <button class="btn bg ebtn" data-e="good" onclick="pickE('good')">good</button>
+        <button class="btn bg ebtn" data-e="strong" onclick="pickE('strong')">strong</button>
+      </div>
+    </div>
+    <div class="row">
+      <button class="btn bfw f1" onclick="saveRef()">&#10003; Save reflection</button>
+      <button class="btn bg" onclick="closeEvening()">Skip</button>
+    </div>
+  </div>
+</div>
+
+<div class="w">
+  <div style="margin-bottom:18px">
+    <div class="rb" style="margin-bottom:12px">
+      <div>
+        <div class="lbl" style="color:var(--ink3);margin-bottom:7px">Meko's Daily Cockpit</div>
+        <div style="font-size:clamp(1.7rem,4vw,2.8rem);font-weight:500;letter-spacing:-.02em;line-height:1.1">Your best year,<br>one day at a time.</div>
+        <div class="sans" style="font-size:11px;color:var(--ink3);margin-top:7px">AIN &middot; PLB &middot; Sonoran &middot; NCBW &middot; Work &middot; Personal &middot; Events</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:7px">
+        <div class="sans row" style="font-size:11px;color:var(--ink3);gap:5px">
+          <span class="save-dot" id="sdot"></span><span id="slbl">saved</span>
+        </div>
+        <div class="row" style="gap:6px">
+          <button class="btn bg bsm" onclick="openMorning()">&#9728; Morning</button>
+          <button class="btn bg bsm" onclick="document.getElementById('modal-evening').classList.remove('hidden')">&#127769; Reflect</button>
+        </div>
+      </div>
+    </div>
+    <div class="div" style="margin:0"></div>
+  </div>
+
+  <div class="row" style="gap:4px;margin-bottom:18px;overflow-x:auto;padding-bottom:2px">
+    <button class="tab on" id="t-home" onclick="goView('home')">&#127968; Today</button>
+    <button class="tab" id="t-content" onclick="goView('content')">&#10022; Content</button>
+    <button class="tab" id="t-books" onclick="goView('books')">&#128218; Book Sales</button>
+    <button class="tab" id="t-plan" onclick="goView('plan')">&#9672; Plan My Day</button>
+    <button class="tab" id="t-timeline" onclick="goView('timeline')">&#9636; Timeline</button>
+  </div>
+
+  <!-- HOME -->
+
+  <div id="v-home">
+    <div class="g3" style="margin-bottom:18px">
+      <div class="card" style="background:linear-gradient(135deg,var(--cd),var(--cr))" id="c-enc"></div>
+      <div class="card" id="c-int"></div>
+      <div class="card" style="background:var(--ink);border-color:var(--ink)" id="c-start"></div>
+    </div>
+    <div class="g3" style="margin-bottom:18px">
+      <div class="card">
+        <div class="rb" style="margin-bottom:9px"><div class="lbl" style="color:var(--tr)">&#9675; Due Today</div><span id="n-due" style="font-size:1.7rem">0</span></div>
+        <div class="sy" id="l-due"></div>
+      </div>
+      <div class="card">
+        <div class="rb" style="margin-bottom:9px"><div class="lbl" style="color:var(--tr2)">&#9201; Overdue</div><span id="n-over" style="font-size:1.7rem">0</span></div>
+        <div class="sy" id="l-over"></div>
+      </div>
+      <div class="card">
+        <div class="rb" style="margin-bottom:9px"><div class="lbl" style="color:var(--gd)">&#128197; This Week</div><span id="n-week" style="font-size:1.7rem">0</span></div>
+        <div class="sy" id="l-week"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:18px">
+      <div class="row" style="margin-bottom:9px">
+        <div class="lbl" style="color:var(--ink3)">Across your world</div>
+        <div style="flex:1;height:1px;background:var(--bd);margin-left:10px"></div>
+        <button id="cf-btn" class="hidden sans bsm" onclick="clearFilter()" style="font-size:10px;color:var(--tr);background:none;border:none;cursor:pointer">&#10005; Clear filter</button>
+      </div>
+      <div id="cat-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px"></div>
+    </div>
+    <div style="margin-bottom:18px">
+      <div class="rb" style="margin-bottom:12px">
+        <div class="row" style="gap:9px"><div style="font-size:1.8rem">Projects</div><span class="sans" id="p-count" style="font-size:11px;color:var(--ink4)"></span></div>
+        <button class="btn" onclick="toggleAddProj()">+ New Project</button>
+      </div>
+      <div class="card hidden" id="add-proj-form" style="margin-bottom:11px">
+        <div class="row" style="gap:7px;margin-bottom:9px;flex-wrap:wrap">
+          <input id="np-title" placeholder="Project title..." style="flex:2;min-width:150px">
+          <select id="np-cat" style="width:auto"></select>
+          <input type="date" id="np-date" style="width:auto">
+        </div>
+        <div class="row" style="gap:7px">
+          <button class="btn" onclick="doAddProj()">+ Create</button>
+          <button class="btn bg" onclick="toggleAddProj()">Cancel</button>
+        </div>
+      </div>
+      <div id="proj-list"></div>
+    </div>
+    <div class="g3" style="margin-bottom:18px">
+      <div class="card">
+        <div class="lbl" style="color:var(--gd);margin-bottom:9px">&#128161; Quick Capture</div>
+        <div class="row" style="gap:5px;margin-bottom:9px">
+          <input id="qi" placeholder="An idea, a thought..." style="flex:1" onkeydown="if(event.key==='Enter')addCap()">
+          <button class="btn" style="padding:7px 11px" onclick="addCap()">+</button>
+        </div>
+        <div class="sy" id="cap-list"></div>
+      </div>
+      <div class="card">
+        <div class="lbl" style="color:var(--tr);margin-bottom:9px">&#10022; Wins Log</div>
+        <div class="row" style="gap:5px;margin-bottom:9px">
+          <input id="wi" placeholder="Something that moved today..." style="flex:1" onkeydown="if(event.key==='Enter')addWin()">
+          <button class="btn" style="padding:7px 11px" onclick="addWin()">+</button>
+        </div>
+        <div class="sy" id="win-list"></div>
+      </div>
+      <div class="card">
+        <div class="lbl" style="color:var(--pl);margin-bottom:9px">&#9646; Blocked / Waiting</div>
+        <input id="bi" placeholder="What's blocked?" style="margin-bottom:6px">
+        <div class="g2" style="margin-bottom:6px">
+          <input id="bo" placeholder="Waiting on...">
+          <select id="bc" style="width:100%"></select>
+        </div>
+        <button class="btn bfw" style="margin-bottom:9px" onclick="addBlk()">+ Log blocker</button>
+        <div class="sy" id="blk-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+
+  <div id="v-content" class="hidden">
+    <div class="card" style="background:linear-gradient(135deg,#2a1f17,#4a3a2a);border-color:#2a1f17;margin-bottom:16px">
+      <div class="lbl" style="color:#e8a96b;margin-bottom:7px">&#10022; Content Studio</div>
+      <div style="font-size:1.9rem;font-weight:500;color:#fdfbf6;margin-bottom:3px">Your story, written daily.</div>
+      <div class="sans" id="cs-date" style="font-size:11px;color:#a89680"></div>
+    </div>
+    <div class="card" style="border-left:4px solid #e8a96b;margin-bottom:14px">
+      <div class="lbl" style="color:var(--gd);margin-bottom:13px">Step 1 &mdash; Set up your post</div>
+      <div class="g2" style="margin-bottom:11px">
+        <div>
+          <div class="lbl" style="color:var(--ink3);margin-bottom:5px;font-size:9px">Brand</div>
+          <select id="cs-brand" style="width:100%" onchange="updateGenBtn()">
+            <option value="ain">AIN &mdash; Accessories in the Nude</option>
+            <option value="plb">Pure Living Beauty / Authorpreneur</option>
+            <option value="ncbw">NCBW / Community</option>
+            <option value="both">AIN + PLB (2 versions)</option>
+          </select>
+        </div>
+        <div>
+          <div class="lbl" style="color:var(--ink3);margin-bottom:5px;font-size:9px">Platform</div>
+          <select id="cs-plat" style="width:100%">
+            <option value="instagram">Instagram</option>
+            <option value="facebook">Facebook</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="tiktok">TikTok</option>
+            <option value="newsletter">Newsletter</option>
+            <option value="thread">Twitter/X Thread</option>
+          </select>
+        </div>
+      </div>
+      <div class="g2" style="margin-bottom:11px">
+        <div>
+          <div class="lbl" style="color:var(--ink3);margin-bottom:5px;font-size:9px">Content Type</div>
+          <select id="cs-type" style="width:100%">
+            <optgroup label="AIN &mdash; Accessories in the Nude">
+              <option value="ain-showcase">Designer Showcase / Event Promo</option>
+              <option value="ain-community">Community Impact Story</option>
+              <option value="ain-designer">Designer Spotlight</option>
+              <option value="ain-mission">Mission &amp; Legacy Post</option>
+              <option value="ain-nonprofit">Nonprofit / Fundraising</option>
+              <option value="ain-cohort">Cohort / Program Promo</option>
+            </optgroup>
+            <optgroup label="Pure Living Beauty / Authorpreneur">
+              <option value="reinvention">Reinvention &amp; New Seasons</option>
+              <option value="healing">Healing &amp; Personal Growth</option>
+              <option value="book-promo">Book Promo (A Family Blinded, Veiled Echoes, etc.)</option>
+              <option value="author-journey">Author Journey Story</option>
+              <option value="affirmation">Daily Affirmation for Women</option>
+              <option value="learn-life-over">Learn Life Over Message</option>
+              <option value="authorpreneur-tip">Authorpreneur Tip</option>
+              <option value="wellness-tip">Wellness Tip</option>
+            </optgroup>
+            <optgroup label="NCBW / Community">
+              <option value="ncbw-event">NCBW Event Promo</option>
+              <option value="ncbw-impact">Community Impact</option>
+              <option value="walker-expo">Madam C.J. Walker Expo</option>
+            </optgroup>
+            <optgroup label="Any Brand">
+              <option value="cta">Call to Action</option>
+              <option value="quote">Brand Quote / Mantra</option>
+              <option value="behind-scenes">Behind the Scenes</option>
+              <option value="reel-hook">Reel / Video Hook</option>
+              <option value="engagement">Engagement Question</option>
+              <option value="testimonial">Testimonial / Social Proof</option>
+            </optgroup>
+          </select>
+        </div>
+        <div>
+          <div class="lbl" style="color:var(--ink3);margin-bottom:5px;font-size:9px">Tone</div>
+          <select id="cs-tone" style="width:100%">
+            <option value="warm">Warm &amp; Encouraging</option>
+            <option value="bold">Bold &amp; Empowering</option>
+            <option value="reflective">Reflective &amp; Poetic</option>
+            <option value="educational">Educational &amp; Practical</option>
+            <option value="playful">Playful &amp; Light</option>
+            <option value="urgent">Urgent / Launch Energy</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:11px">
+        <div class="lbl" style="color:var(--ink3);margin-bottom:5px;font-size:9px">Topic or idea <span style="text-transform:none;letter-spacing:0;font-weight:400;font-style:italic">(optional)</span></div>
+        <textarea id="cs-topic" rows="2" placeholder="e.g. AIN cohort launch, Learn Life Over message, Sisterhood Under Trial pre-order..." style="font-family:Inter,sans-serif;font-size:13px"></textarea>
+      </div>
+      <div style="margin-bottom:14px">
+        <div class="lbl" style="color:var(--ink3);margin-bottom:5px;font-size:9px">Anything specific to include? <span style="text-transform:none;letter-spacing:0;font-weight:400;font-style:italic">(optional)</span></div>
+        <textarea id="cs-extra" rows="2" placeholder="e.g. mention the cohort link, include rooted radiant real, tie it to Jeremiah 29:11..." style="font-family:Inter,sans-serif;font-size:13px"></textarea>
+      </div>
+      <button class="btn bfw" id="gen-btn" onclick="genContent()" style="padding:13px 20px;font-size:13px">&#10022; Create My Content</button>
+    </div>
+    <div id="cs-loading" class="hidden" style="text-align:center;padding:28px;background:var(--cd);border:1px solid var(--bd);border-radius:3px;margin-bottom:14px">
+      <div class="lbl" style="color:var(--ink3);margin-bottom:10px" id="cs-lmsg">Writing your content...</div>
+      <div class="row" style="justify-content:center;gap:6px">
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--tr);animation:pulse 1.2s ease-in-out infinite"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--pl);animation:pulse 1.2s ease-in-out .2s infinite"></div>
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--gd);animation:pulse 1.2s ease-in-out .4s infinite"></div>
+      </div>
+    </div>
+    <div id="cs-results"></div>
+    <div class="card" style="border-left:3px solid var(--gd)">
+      <div class="rb" style="margin-bottom:11px">
+        <div class="lbl" style="color:var(--gd)">&#10022; Saved Posts</div>
+        <span class="sans" id="sp-count" style="font-size:11px;color:var(--ink4)"></span>
+      </div>
+      <div id="sp-list"></div>
+    </div>
+  </div>
+
+  <!-- BOOKS -->
+
+  <div id="v-books" class="hidden">
+    <div class="card" style="background:linear-gradient(135deg,#2a1f17,#4a3a2a);border-color:#2a1f17;margin-bottom:16px">
+      <div class="lbl" style="color:#e8a96b;margin-bottom:7px">&#128218; Book Sales Tracker &mdash; 2026</div>
+      <div style="font-size:1.9rem;font-weight:500;color:#fdfbf6;margin-bottom:3px">Your stories are selling.</div>
+      <div class="sans" style="font-size:11px;color:#a89680">Soul Talk &middot; Veiled Echoes &middot; A Family Blinded &middot; Sisterhood Under Trial</div>
+    </div>
+    <div id="bk-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:11px;margin-bottom:16px"></div>
+    <div id="bk-low"></div>
+    <div class="card" style="border-left:4px solid var(--tr);margin-bottom:14px">
+      <div class="lbl" style="color:var(--tr);margin-bottom:13px">+ Log a Sale</div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:9px;margin-bottom:9px">
+        <div><div class="lbl" style="font-size:9px;color:var(--ink3);margin-bottom:4px">Book</div><select id="sl-book" style="width:100%"><option value="">Select book...</option></select></div>
+        <div><div class="lbl" style="font-size:9px;color:var(--ink3);margin-bottom:4px">Qty</div><input type="number" id="sl-qty" value="1" min="1"></div>
+        <div><div class="lbl" style="font-size:9px;color:var(--ink3);margin-bottom:4px">Channel</div>
+          <select id="sl-ch" style="width:100%"><option>Direct</option><option>Event</option><option>Amazon</option><option>Online Store</option><option>Consignment</option><option>Gift</option></select>
+        </div>
+        <div><div class="lbl" style="font-size:9px;color:var(--ink3);margin-bottom:4px">Date</div><input type="date" id="sl-date"></div>
+      </div>
+      <div class="row" style="gap:9px;align-items:flex-end">
+        <div class="f1"><div class="lbl" style="font-size:9px;color:var(--ink3);margin-bottom:4px">Notes (optional)</div><input id="sl-notes" placeholder="e.g. NCBW event, online promo..." onkeydown="if(event.key==='Enter')logSale()"></div>
+        <button class="btn" style="background:var(--tr);flex-shrink:0;padding:9px 16px" onclick="logSale()">+ Log Sale</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="rb" style="margin-bottom:13px">
+        <div class="lbl" style="color:var(--pl)">&#128214; Inventory &amp; Sales by Book</div>
+        <button class="btn" onclick="toggleAddBook()">+ Add Book</button>
+      </div>
+      <div id="add-book-form" class="hidden" style="background:var(--cr);border-radius:3px;padding:13px;margin-bottom:13px">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:7px;margin-bottom:9px">
+          <input id="nb-title" placeholder="Book title">
+          <select id="nb-fmt" style="width:100%"><option>Paperback</option><option>Hardcover</option><option>eBook</option></select>
+          <input type="number" id="nb-price" placeholder="Price $">
+          <input type="number" id="nb-inv" placeholder="Inventory">
+        </div>
+        <div class="row" style="gap:7px">
+          <button class="btn" onclick="doAddBook()">+ Add</button>
+          <button class="btn bg" onclick="toggleAddBook()">Cancel</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Book</th><th>Format</th><th>Price</th><th>Inventory</th><th>Units Sold</th><th>Revenue YTD</th><th>Status</th><th></th></tr></thead>
+          <tbody id="bk-tbody"></tbody>
+          <tfoot><tr><td colspan="2" class="lbl" style="font-size:9px">TOTALS</td><td></td><td id="tot-inv"></td><td id="tot-units"></td><td id="tot-rev"></td><td colspan="2"></td></tr></tfoot>
+        </table>
+      </div>
+    </div>
+    <div id="bk-hist" class="card hidden" style="margin-top:13px">
+      <div class="lbl" style="color:var(--pl);margin-bottom:9px" id="bk-hist-title">Sales History</div>
+      <div id="bk-hist-body"></div>
+    </div>
+  </div>
+
+  <!-- PLAN -->
+
+  <div id="v-plan" class="hidden">
+    <div class="card" style="background:linear-gradient(135deg,var(--cd),var(--cr));margin-bottom:16px">
+      <div class="lbl" style="color:var(--pl);margin-bottom:9px">&#9672; Plan My Day</div>
+      <div style="font-size:1.6rem;margin-bottom:13px">What can fit today?</div>
+      <div class="row">
+        <span class="sans" style="font-size:14px;color:var(--ink2)">I have</span>
+        <select id="hrs" style="width:auto" onchange="S.hours=parseFloat(this.value);sv();rdPlan()">
+          <option value="1">1 hour</option><option value="2">2 hours</option><option value="3">3 hours</option>
+          <option value="4" selected>4 hours</option><option value="5">5 hours</option><option value="6">6 hours</option><option value="8">8 hours</option>
+        </select>
+        <span class="sans" style="font-size:14px;color:var(--ink2)">today.</span>
+      </div>
+    </div>
+    <div class="g3" id="plan-stats" style="margin-bottom:16px"></div>
+    <div class="card" style="margin-bottom:13px">
+      <div style="font-size:1.35rem;margin-bottom:11px">Your plan</div>
+      <div id="plan-list"></div>
+    </div>
+    <div id="plan-overflow"></div>
+  </div>
+
+  <!-- TIMELINE -->
+
+  <div id="v-timeline" class="hidden">
+    <div class="card" style="margin-bottom:13px">
+      <div class="lbl" style="color:var(--tl);margin-bottom:5px">&#9636; Timeline &mdash; Next 12 weeks</div>
+      <div class="sans" style="font-size:11px;color:var(--ink4)">Bars span earliest task to target date. Red = today.</div>
+    </div>
+    <div class="card" style="overflow-x:auto">
+      <div style="min-width:680px">
+        <div style="display:flex;margin-bottom:7px">
+          <div style="width:170px;flex-shrink:0"></div>
+          <div id="tl-weeks" style="flex:1;display:grid"></div>
+        </div>
+        <div id="tl-rows"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer style="text-align:center;margin-top:36px;padding-top:16px;border-top:1px solid var(--bd)">
+    <div style="font-style:italic;color:var(--gd)">Rooted. Radiant. Real.</div>
+    <div class="sans" style="font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink4);margin-top:5px">Meko &middot; Every day, on purpose</div>
+  </footer>
+</div>
+
+<style>
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+
+<script>
+const KEY='meko-v6';
+const CATS={ain:{label:'AIN',color:'#6b4a7a',soft:'rgba(107,74,122,.15)'},plb:{label:'Pure Living Beauty',color:'#b8512f',soft:'rgba(184,81,47,.15)'},sonoran:{label:'Sonoran Palette',color:'#2f6b6b',soft:'rgba(47,107,107,.15)'},ncbw:{label:'NCBW/Community',color:'#8a6b2f',soft:'rgba(138,107,47,.15)'},work:{label:'Work',color:'#3d4a3a',soft:'rgba(61,74,58,.15)'},personal:{label:'Personal',color:'#7a4a5e',soft:'rgba(122,74,94,.15)'},events:{label:'Events',color:'#4a5e7a',soft:'rgba(74,94,122,.15)'}};
+const ENCS=[{m:"You don't have to move mountains today. Just show up rooted.",v:"Be still, and know that I am God.",r:"Psalm 46:10 (NLT)"},{m:"Your soft is strong. Your slow is strategic. Keep building.",v:"The Lord your God is with you, a mighty warrior who saves.",r:"Zephaniah 3:17 (NLT)"},{m:"Everything you're planting is working underground. Trust the unseen season.",v:"Don't get tired of doing what is good. At just the right time we will reap a harvest.",r:"Galatians 6:9 (NLT)"},{m:"The work you're making matters. The vision is yours to steward.",v:"Whatever you do, do well.",r:"Ecclesiastes 9:10 (NLT)"},{m:"Slowing down is not falling behind. Pace is a prayer.",v:"Come to me, all of you who are weary, and I will give you rest.",r:"Matthew 11:28 (NLT)"},{m:"Rooted. Radiant. Real. That's the assignment today.",v:"You are the light of the world.",r:"Matthew 5:14 (NLT)"},{m:"You are not late. You are right on time.",v:"For I know the plans I have for you.",r:"Jeremiah 29:11 (NLT)"},{m:"Yesterday was full. Today is fresh. Begin again, gently.",v:"His mercies begin afresh each morning.",r:"Lamentations 3:23 (NLT)"},{m:"The vision feels big because it is. Take one brave step.",v:"Be strong and courageous. Do not be afraid.",r:"Joshua 1:9 (NLT)"},{m:"Small things, done with love, become legacy.",v:"Whoever can be trusted with very little can also be trusted with much.",r:"Luke 16:10 (NLT)"},{m:"Something new is being born through your hands. Don't rush it.",v:"See, I am doing a new thing!",r:"Isaiah 43:19 (NLT)"},{m:"Every caption, every page, every email is a seed.",v:"Whoever sows generously will also reap generously.",r:"2 Corinthians 9:6 (NLT)"},{m:"Before the doing, you are beloved.",v:"We love each other because he loved us first.",r:"1 John 4:19 (NLT)"},{m:"Lead with delight. The doing follows joy.",v:"Take delight in the Lord.",r:"Psalm 37:4 (NLT)"},{m:"Trade the anxious loop for one clear next step.",v:"If you need wisdom, ask our generous God.",r:"James 1:5 (NLT)"}];
+const BRANDS={ain:"Accessories in the Nude (AIN) founded by Meko Krout in 2008. One of the longest-running minority fashion showcases in Dallas. 18-year 501c3 nonprofit supporting 160+ designers. Voice: bold, celebratory, community-proud.",plb:"Pure Living Beauty (PLB) by Meko Krout. Built on reinvention, healing, visibility. Guides women through divorce, grief, reinvention, empty nesting. Core belief: Learn Life Over. Books: A Family Blinded (2018), Pure Living Mini Book of Quotes (2019), Veiled Echoes, Sisterhood Under Trial series, Soul Talk Vol.2 contributor. Voice: rooted, radiant, real.",ncbw:"NCBW (National Coalition of 100 Black Women). Meko serves her local chapter, uplifting Black women through civic engagement and events including the Madam C.J. Walker Expo. Voice: dignified, empowering."};
+const PLATS={instagram:"Instagram caption: 3-5 sentences + 5 hashtags",facebook:"Facebook: 4-6 warm personal sentences",linkedin:"LinkedIn: 4-6 professional yet personal",tiktok:"TikTok: 2-3 punchy lines + 5 hashtags",newsletter:"Newsletter intro: 3-4 warm sentences",thread:"Twitter/X thread: 4 numbered tweets under 280 chars"};
+
+const uid=()=>Math.random().toString(36).slice(2,10);
+const td=()=>new Date().toISOString().split('T')[0];
+const addD=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().split('T')[0]};
+const addM=(s,n)=>{const d=new Date(s+'T12:00:00');d.setMonth(d.getMonth()+n);return d.toISOString().split('T')[0]};
+const fmD=s=>s?new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+const dB=(a,b)=>(!a||!b)?null:Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/86400000);
+const greet=()=>{const h=new Date().getHours();return h<12?'Good morning':h<17?'Good afternoon':'Good evening'};
+const enc=()=>{const d=new Date();return ENCS[(d.getFullYear()*1000+(d.getMonth()+1)*50+d.getDate())%ENCS.length]};
+const chip=(label,color,soft)=>`<span style="font-family:Inter,sans-serif;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;background:${soft};color:${color};padding:2px 7px;border-radius:2px;display:inline-block;flex-shrink:0">${label}</span>`;
+const cb=(done,sm)=>`<span style="width:${sm?13:16}px;height:${sm?13:16}px;border:1.5px solid ${done?'#2a1f17':'#a89680'};border-radius:3px;background:${done?'#2a1f17':'transparent'};display:inline-flex;align-items:center;justify-content:center;flex-shrink:0">${done?`<svg width="${sm?8:10}" height="${sm?8:10}" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`:''}</span>`;
+const el=id=>document.getElementById(id);
+const show=id=>el(id)&&el(id).classList.remove('hidden');
+const hide=id=>el(id)&&el(id).classList.add('hidden');
+const mk=(text,energy,estimate,recurrence,due,subs=[])=>({id:uid(),text,done:false,energy,estimate,recurrence,due:due||'',subtasks:subs.map(s=>({id:uid(),text:s,done:false}))});
+const T=td();
+const fmtM=m=>m<60?m+'m':Math.floor(m/60)+'h'+(m%60?' '+m%60+'m':'');
+
+const DBOOKS=[{id:uid(),title:'Soul Talk Vol. 3',format:'Paperback',price:25.00,inventory:5,reorderAt:5,sales:[]},{id:uid(),title:'Veiled Echoes',format:'Paperback',price:18.00,inventory:9,reorderAt:5,sales:[]},{id:uid(),title:'A Family Blinded',format:'Paperback',price:15.99,inventory:9,reorderAt:5,sales:[]},{id:uid(),title:'Sisterhood Under Trial - Novella',format:'Paperback',price:15.00,inventory:28,reorderAt:10,sales:[]},{id:uid(),title:'Sisterhood Under Trial - Coloring Book',format:'Paperback',price:18.00,inventory:18,reorderAt:10,sales:[]}];
+
+const DPROJ=[{id:uid(),title:'Paze / Discover Integration',category:'work',targetDate:'',expanded:true,tasks:[mk('Review open tickets across partners','admin',60,'weekly',T,['Visa tickets','Mastercard tickets','EWS tickets','Capital One tickets']),mk('Follow up on provisioning approvals','admin',30,'none',addD(T,2)),mk('Update vacation turnover doc','admin',45,'none',addD(T,7))]},{id:uid(),title:'Next PLB Book',category:'ain',targetDate:'',expanded:false,tasks:[mk('Outline & concept','deep',180,'none','',['Define core promise','Draft working title','Sketch chapter list','Write synopsis']),mk('First draft','deep',240,'none','',['Set word-count goal','Draft chapters 1-3','Draft chapters 4-6','Draft chapters 7-9','Draft final chapters']),mk('Edit pass','deep',180,'none','',['Self-edit','Beta readers','Incorporate feedback','Professional copyedit']),mk('Cover + interior design','creative',120,'none','',['Cover moodboard','Commission cover','Interior layout']),mk('Launch','admin',90,'none','',['Pre-order page','Announce to list + socials','Launch day push'])]},{id:uid(),title:'Coloring Book',category:'ain',targetDate:'',expanded:false,tasks:[mk('Theme + concept','creative',90,'none','',['Decide theme','Define audience','Set page count']),mk('Create artwork','creative',240,'none','',['Sketch 10 concepts','Refine batch 1','Refine batch 2','Add affirmation captions']),mk('Print prep + layout','admin',120,'none','',['Choose POD service','Format interior','Design cover','Order proof copy']),mk('Launch','admin',60,'none','',['Teaser content','Purchase page live','Launch announcement'])]},{id:uid(),title:'PLB Website & Content',category:'plb',targetDate:'',expanded:false,tasks:[mk('Weekly social content','creative',90,'weekly',T,['Plan 3 posts','Source visuals','Write captions + CTAs','Schedule posts']),mk('Website refresh review','admin',60,'none','',['Audit homepage','Update Authorpreneur page','Check mobile'])]},{id:uid(),title:'Sonoran Palette Gallery Show',category:'sonoran',targetDate:'',expanded:false,tasks:[mk('Finalize photo selection (27 images)','creative',180,'none','',['Final edit pass','Choose hero image','Decide print sizes']),mk('Gallery outreach','admin',90,'none','',['Research 5 galleries','Artist statement + bio','Send submissions'])]},{id:uid(),title:'Madam C.J. Walker Expo 2026',category:'ncbw',targetDate:'',expanded:false,tasks:[mk('Finalize flyer design','creative',120,'none','',['Confirm NCBW details','Final design review','Export print + digital']),mk('Promotion rollout','admin',90,'none','',['Social posts schedule','Email announcement','Partner co-promo'])]},{id:uid(),title:'Personal - Rhythms & Rest',category:'personal',targetDate:'',expanded:false,tasks:[mk('Daily devotional time','quick',15,'daily',T),mk('Movement (3x/week)','quick',30,'weekly',T),mk('Weekly sabbath / rest block','quick',15,'weekly',addD(T,3),['Block calendar','Phone off'])]},{id:uid(),title:'Events & Speaking',category:'events',targetDate:'',expanded:false,tasks:[mk('Build speaker one-pager','admin',90,'none','',['Bio + headshot','Topic list','Testimonials']),mk('Outreach to 5 aligned events','admin',60,'monthly',addD(T,14))]}];
+
+let S,svT,activeFilter=null,activeBook=null,selE='';
+
+function load(){
+  try{
+    const r=localStorage.getItem(KEY);
+    if(r){
+      S=JSON.parse(r);
+      S.books=(S.books||[]).map(b=>({...b,sales:b.sales||[]}));
+      if(!S.books.length)S.books=JSON.parse(JSON.stringify(DBOOKS));
+      S.projects=(S.projects||[]).map(p=>({...p,tasks:(p.tasks||[]).map(t=>({estimate:30,recurrence:'none',...t,subtasks:t.subtasks||[]}))}));
+      S.savedPosts=S.savedPosts||[];
+      S.quickCapture=S.quickCapture||[];
+      S.wins=S.wins||[];
+      S.blocked=S.blocked||[];
+      S.reflections=S.reflections||[];
+    }else{
+      S={projects:JSON.parse(JSON.stringify(DPROJ)),books:JSON.parse(JSON.stringify(DBOOKS)),quickCapture:[],wins:[],savedPosts:[],blocked:[{id:uid(),text:'Paze provisioning approvals',owner:'Partner teams',category:'work',since:T}],reflections:[],weeklyIntention:'',intentionSetOn:null,dismissedMorningFor:null,hours:4};
+    }
+  }catch(e){S={projects:JSON.parse(JSON.stringify(DPROJ)),books:JSON.parse(JSON.stringify(DBOOKS)),quickCapture:[],wins:[],savedPosts:[],blocked:[],reflections:[],weeklyIntention:'',intentionSetOn:null,dismissedMorningFor:null,hours:4};}
+}
+
+function sv(now){
+  if(svT)clearTimeout(svT);
+  const dot=el('sdot'),lbl=el('slbl');
+  if(dot)dot.className='save-dot saving';
+  if(lbl)lbl.textContent='saving...';
+  const go=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(dot)dot.className='save-dot';if(lbl)lbl.textContent='saved';};
+  if(now)go();else svT=setTimeout(go,700);
+}
+
+function allT(){return S.projects.flatMap(p=>p.tasks.map(t=>({...t,pid:p.id,pTitle:p.title,category:p.category})));}
+function dueT(){return allT().filter(t=>!t.done&&t.due===td());}
+function overT(){return allT().filter(t=>!t.done&&t.due&&t.due<td());}
+function weekT(){return allT().filter(t=>{if(t.done||!t.due)return false;const d=dB(td(),t.due);return d!==null&&d>0&&d<=7;});}
+
+function toggleT(pid,tid){
+  const p=S.projects.find(x=>x.id===pid);if(!p)return;
+  const ti=p.tasks.findIndex(x=>x.id===tid);if(ti<0)return;
+  const t=p.tasks[ti];const was=t.done;t.done=!was;t.doneOn=!was?td():null;
+  if(!was&&t.recurrence&&t.recurrence!=='none'){
+    const nd=t.recurrence==='daily'?addD(t.due||td(),1):t.recurrence==='weekly'?addD(t.due||td(),7):addM(t.due||td(),1);
+    const nt=JSON.parse(JSON.stringify(t));nt.id=uid();nt.done=false;nt.doneOn=null;nt.due=nd;
+    nt.subtasks=(nt.subtasks||[]).map(s=>({...s,id:uid(),done:false}));
+    p.tasks.splice(ti+1,0,nt);
+  }
+  sv();rdHome();
+}
+function toggleS(pid,tid,sid){const t=S.projects.find(x=>x.id===pid)?.tasks.find(x=>x.id===tid);if(!t)return;const s=t.subtasks.find(x=>x.id===sid);if(s)s.done=!s.done;sv();rdProj();}
+function updF(pid,tid,f,v){const t=S.projects.find(x=>x.id===pid)?.tasks.find(x=>x.id===tid);if(t){t[f]=v;sv();if(f==='due')rdHome();else rdProj();}}
+function defer(pid,tid){updF(pid,tid,'due',addD(td(),1));rdHome();}
+function delT(pid,tid){const p=S.projects.find(x=>x.id===pid);if(p){p.tasks=p.tasks.filter(x=>x.id!==tid);sv();rdHome();}}
+function addSub(pid,tid,el2){const txt=el2.value.trim();if(!txt)return;const t=S.projects.find(x=>x.id===pid)?.tasks.find(x=>x.id===tid);if(t){t.subtasks.push({id:uid(),text:txt,done:false});el2.value='';sv();rdProj();}}
+function delSub(pid,tid,sid){const t=S.projects.find(x=>x.id===pid)?.tasks.find(x=>x.id===tid);if(t){t.subtasks=t.subtasks.filter(x=>x.id!==sid);sv();rdProj();}}
+function addTP(pid,inp){const txt=inp.value.trim();if(!txt)return;const p=S.projects.find(x=>x.id===pid);if(p){p.tasks.push(mk(txt,'admin',30,'none',''));inp.value='';sv();rdProj();}}
+function toggleP(pid){const p=S.projects.find(x=>x.id===pid);if(p){p.expanded=!p.expanded;sv();rdProj();}}
+function updTgt(pid,v){const p=S.projects.find(x=>x.id===pid);if(p){p.targetDate=v;sv();}}
+function delP(pid){if(!confirm('Remove this project?'))return;S.projects=S.projects.filter(x=>x.id!==pid);sv();rdHome();}
+function toggleAddProj(){el('add-proj-form')?.classList.toggle('hidden');}
+function doAddProj(){const t=el('np-title')?.value.trim();if(!t)return;S.projects.push({id:uid(),title:t,category:el('np-cat')?.value||'plb',targetDate:el('np-date')?.value||'',expanded:true,tasks:[]});el('np-title').value='';hide('add-proj-form');sv();rdHome();}
+function setFilter(k){activeFilter=activeFilter===k?null:k;rdProj();rdCats();el('cf-btn')?.classList.toggle('hidden',!activeFilter);}
+function clearFilter(){activeFilter=null;rdProj();rdCats();hide('cf-btn');}
+function addCap(){const i=el('qi');const t=i?.value.trim();if(!t)return;S.quickCapture=[{id:uid(),text:t,date:td()},...S.quickCapture];i.value='';sv();rdCap();}
+function remCap(id){S.quickCapture=S.quickCapture.filter(x=>x.id!==id);sv();rdCap();}
+function addWin(){const i=el('wi');const t=i?.value.trim();if(!t)return;S.wins=[{id:uid(),text:t,date:td()},...S.wins];i.value='';sv();rdWins();}
+function remWin(id){S.wins=S.wins.filter(x=>x.id!==id);sv();rdWins();}
+function addBlk(){const t=el('bi')?.value.trim();if(!t)return;S.blocked.push({id:uid(),text:t,owner:el('bo')?.value||'',category:el('bc')?.value||'work',since:td()});el('bi').value='';el('bo').value='';sv();rdBlk();}
+function remBlk(id){S.blocked=S.blocked.filter(x=>x.id!==id);sv();rdBlk();}
+function pickE(e){selE=e;document.querySelectorAll('.ebtn').forEach(b=>{b.style.background=b.dataset.e===e?'#2a1f17':'';b.style.color=b.dataset.e===e?'#fdfbf6':''});}
+function saveRef(){const m=el('r-moved')?.value,st=el('r-stalled')?.value,f=el('r-focus')?.value;if(m||st||f)S.reflections=[{id:uid(),date:td(),moved:m,stalled:st,focus:f,energy:selE},...S.reflections];S.dismissedEveFor=td();sv();hide('modal-evening');}
+function closeEvening(){hide('modal-evening');}
+
+function openMorning(){
+  const e=enc();const dt=dueT().length,ov=overT().length,wk=weekT().length;
+  const sr=smartRec();const lr=S.reflections?.[0];
+  const tn=lr?.date===td()&&lr.focus?`<div style="margin-top:13px;padding:12px;background:rgba(107,74,122,.1);border-left:3px solid #6b4a7a;border-radius:2px"><div class="lbl" style="color:#6b4a7a;margin-bottom:4px">Last night you set today's focus as</div><div style="font-size:1rem">${lr.focus}</div></div>`:'';
+  el('morning-box').innerHTML=`<div class="lbl" style="color:var(--tr);margin-bottom:12px">&#9728; ${greet()}, Meko</div>
+  <div style="font-size:clamp(1.6rem,4vw,2.2rem);font-weight:500;line-height:1.2;margin-bottom:12px">${e.m}</div>
+  <div class="div"></div>
+  <div class="lbl" style="color:var(--gd);margin-bottom:7px">Today's verse</div>
+  <div style="font-style:italic;font-size:1rem;line-height:1.5;color:var(--ink2);margin-bottom:3px">"${e.v}"</div>
+  <div class="sans" style="font-size:10px;color:var(--gd);letter-spacing:.13em">&mdash; ${e.r}</div>
+  ${tn}
+  <div class="div"></div>
+  <div class="g3" style="margin-bottom:12px">
+    <div style="text-align:center;padding:10px;background:var(--cr);border-radius:3px"><div style="font-size:2rem;color:var(--tr);line-height:1">${dt}</div><div class="sans" style="font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink3);margin-top:3px">Due today</div></div>
+    <div style="text-align:center;padding:10px;background:var(--cr);border-radius:3px"><div style="font-size:2rem;color:var(--gd);line-height:1">${wk}</div><div class="sans" style="font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink3);margin-top:3px">This week</div></div>
+    <div style="text-align:center;padding:10px;background:var(--cr);border-radius:3px"><div style="font-size:2rem;color:${ov?'var(--tr2)':'var(--ink4)'};line-height:1">${ov}</div><div class="sans" style="font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink3);margin-top:3px">Overdue</div></div>
+  </div>
+  ${sr?`<div style="padding:12px;background:var(--cr);border-left:3px solid var(--tr);border-radius:2px;margin-bottom:13px"><div class="lbl" style="color:var(--tr);margin-bottom:4px">Start here</div><div style="font-size:1.05rem">${sr.task.text}</div><div class="sans" style="font-size:11px;color:var(--ink3);margin-top:3px">${sr.reason} &middot; ${sr.task.pTitle}</div></div>`:''}
+  <button class="btn bfw" onclick="dismissMorning()" style="padding:12px 20px;font-size:12px">&#10145; Begin today</button>`;
+  show('modal-morning');
+}
+function dismissMorning(){S.dismissedMorningFor=td();sv();hide('modal-morning');}
+function smartRec(){
+  const ov=overT();if(ov.length)return{task:ov[0],reason:`Overdue - ${Math.abs(dB(td(),ov[0].due))} day(s) ago`};
+  const dt=dueT();if(dt.length){const q=dt.find(t=>t.energy==='quick');return{task:q||dt[0],reason:q?'Quick win to build momentum':'Due today'};}
+  const fo=allT().find(t=>!t.done);if(fo)return{task:fo,reason:'Fresh start'};return null;
+}
+
+function rdHome(){rdEnc();rdInt();rdStart();rdList('l-due',dueT(),'n-due',false,true);rdList('l-over',overT(),'n-over',true,false);rdList('l-week',weekT(),'n-week',false,false,true);rdCats();rdProj();rdCap();rdWins();rdBlk();}
+
+function rdEnc(){const e=enc();if(!el('c-enc'))return;el('c-enc').innerHTML=`<div class="lbl" style="color:var(--tr);margin-bottom:9px">&#9728; Today's word</div><div style="font-size:1.25rem;line-height:1.3;margin-bottom:13px">${e.m}</div><div style="border-top:1px solid var(--bd);padding-top:11px"><div style="font-style:italic;font-size:.9rem;line-height:1.5;color:var(--ink2);margin-bottom:3px">"${e.v}"</div><div class="sans" style="font-size:10px;color:var(--gd);letter-spacing:.1em">&mdash; ${e.r}</div></div>`;}
+
+function rdInt(){if(!el('c-int'))return;el('c-int').innerHTML=`<div class="lbl" style="color:var(--pl);margin-bottom:9px">&#9733; This week, I intend to...</div><textarea id="int-inp" rows="4" placeholder="One phrase. One focus." style="font-family:'Cormorant Garamond',serif;font-size:16px;line-height:1.4">${S.weeklyIntention||''}</textarea>${S.intentionSetOn?`<div class="sans" style="font-size:10px;color:var(--ink4);margin-top:5px">Set ${fmD(S.intentionSetOn)}</div>`:''}`; setTimeout(()=>{const i=el('int-inp');if(i)i.addEventListener('input',e=>{S.weeklyIntention=e.target.value;S.intentionSetOn=td();sv();});},0);}
+
+function rdStart(){if(!el(‘c-start’))return;const sr=smartRec();el(‘c-start’).innerHTML=`<div class="lbl" style="color:#e8a96b;margin-bottom:9px">&#10022; Start here</div>${sr?`<div style="font-size:1.3rem;line-height:1.2;color:#fdfbf6;margin-bottom:9px">${sr.task.text}</div><div class="row" style="margin-bottom:7px">${chip(CATS[sr.task.category]?.label,CATS[sr.task.category]?.color,‘rgba(255,255,255,.2)’)}<span class="sans" style="font-size:10px;color:#d4b896">⏱ ${sr.task.estimate||30}m</span></div><div class="sans" style="font-size:11px;color:#d4b896;font-style:italic">${sr.reason}</div>`:`<div style="font-size:1.1rem;color:#d4b896">Everything’s done. Rest is holy work too.</div>`}`;}
+
+function rdList(listId,tasks,cntId,days,show_,showDate){if(el(cntId))el(cntId).textContent=tasks.length;const el2=el(listId);if(!el2)return;if(!tasks.length){el2.innerHTML=’<div class="sans" style="font-size:12px;color:var(--ink4);font-style:italic;padding:5px 0">All clear ✦</div>’;return;}el2.innerHTML=tasks.map(t=>{const cat=CATS[t.category];const dl=days&&t.due?Math.abs(dB(td(),t.due)):null;return`<div style="display:flex;align-items:flex-start;gap:7px;padding:6px 0;border-bottom:1px solid #f5efe6"><button style="background:none;border:none;cursor:pointer;padding:0;margin-top:2px" onclick="toggleT('${t.pid}','${t.id}')">${cb(t.done)}</button><div style="flex:1;min-width:0"><div class="row" style="margin-bottom:2px">${cat?chip(cat.label,cat.color,cat.soft):''}${showDate&&t.due?`<span class="sans" style="font-size:10px;color:var(--ink3)">${fmD(t.due)}</span>`:''}${dl!==null?`<span class="sans" style="font-size:10px;color:var(--tr2);font-weight:600">${dl}d late</span>`:''}${t.recurrence&&t.recurrence!=='none'?'<span class="sans" style="font-size:10px;color:var(--ink4)">&#8635;</span>':''}</div><div style="font-size:.9rem;${t.done?'text-decoration:line-through;color:var(--ink4)':''}">${t.text}</div><div class="sans" style="font-size:10px;color:var(--ink4)">${t.pTitle}</div></div><button onclick="defer('${t.pid}','${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--ink4);font-size:12px;padding:2px">&#9657;</button></div>`;}).join(’’);}
+
+function rdCats(){const g=el(‘cat-grid’);if(!g)return;g.innerHTML=Object.entries(CATS).map(([k,c])=>{const projs=S.projects.filter(p=>p.category===k);const open=projs.reduce((a,p)=>a+p.tasks.filter(t=>!t.done).length,0);const total=projs.reduce((a,p)=>a+p.tasks.length,0);const on=activeFilter===k;return`<button onclick="setFilter('${k}')" style="background:${on?c.color:'var(--cd)'};border:1px solid ${on?c.color:'var(--bd)'};border-left:4px solid ${c.color};border-radius:3px;padding:11px;cursor:pointer;text-align:left;width:100%"><div class="lbl" style="color:${on?'white':c.color};margin-bottom:6px">${c.label}</div><div style="font-size:1.7rem;color:${on?'white':'var(--ink)'};line-height:1">${open}</div><div class="sans" style="font-size:10px;color:${on?'rgba(255,255,255,.75)':'var(--ink4)'};margin-top:3px">of ${total} &middot; ${projs.length} proj</div></button>`;}).join(’’);}
+
+function rdProj(){
+const pl=el(‘proj-list’);if(!pl)return;
+const catOpts=Object.entries(CATS).map(([k,c])=>`<option value="${k}">${c.label}</option>`).join(’’);
+[‘np-cat’,‘bc’].forEach(id=>{const e=el(id);if(e&&!e.innerHTML)e.innerHTML=catOpts;});
+if(el(‘p-count’))el(‘p-count’).textContent=S.projects.length+’ active’+(activeFilter?’ · ‘+CATS[activeFilter]?.label:’’);
+const vis=activeFilter?S.projects.filter(p=>p.category===activeFilter):S.projects;
+if(!vis.length){pl.innerHTML=’<div class="sans" style="font-size:12px;color:var(--ink4);font-style:italic;padding:14px 0">No projects in this category.</div>’;return;}
+pl.innerHTML=vis.map(p=>{
+const cat=CATS[p.category];const done=p.tasks.filter(t=>t.done).length;const pct=p.tasks.length?Math.round(done/p.tasks.length*100):0;
+const tasks=p.expanded?p.tasks.map(t=>{
+const isOD=t.due&&t.due<td()&&!t.done;const sd=(t.subtasks||[]).filter(s=>s.done).length;const st=(t.subtasks||[]).length;const tExp=!!(window._texp&&window._texp[t.id]);
+return`<div style="padding:5px 0;border-bottom:1px solid #f5efe6"><div style="display:flex;align-items:flex-start;gap:6px"><button style="background:none;border:none;cursor:pointer;padding:0;margin-top:3px" onclick="toggleT('${p.id}','${t.id}')">${cb(t.done)}</button><div style="flex:1;min-width:0"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px"><span style="font-size:.95rem;${t.done?'text-decoration:line-through;color:var(--ink4)':'color:var(--ink)'};flex:1">${t.text}</span><div style="display:flex;gap:3px;flex-shrink:0"><button onclick="toggleTExp('${t.id}')" class="sans" style="font-size:10px;color:var(--ink4);background:none;border:none;cursor:pointer;white-space:nowrap">${tExp?'&#9660;':'&#9654;'} ${sd}/${st}</button><button onclick="defer('${p.id}','${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--ink4);font-size:11px;padding:2px">&#9657;</button><button onclick="delT('${p.id}','${t.id}')" style="background:none;border:none;cursor:pointer;color:var(--ink4);font-size:11px;padding:2px">&#10005;</button></div></div> <div class="row" style="margin-top:3px;flex-wrap:wrap;gap:6px"> <select onchange="updF('${p.id}','${t.id}','energy',this.value)" style="font-size:10px;background:transparent;border:none;color:var(--ink3);cursor:pointer;padding:0;font-family:Inter,sans-serif"><option ${t.energy==='deep'?'selected':''} value="deep">Deep Work</option><option ${t.energy==='creative'?'selected':''} value="creative">Creative</option><option ${t.energy==='admin'?'selected':''} value="admin">Admin</option><option ${t.energy==='quick'?'selected':''} value="quick">Quick Win</option></select> <select onchange="updF('${p.id}','${t.id}','estimate',parseInt(this.value))" style="font-size:10px;background:transparent;border:none;color:var(--ink3);cursor:pointer;padding:0;font-family:Inter,sans-serif">${[15,30,45,60,90,120,180,240].map(v=>`<option ${t.estimate==v?‘selected’:’’} value=”${v}”>${v<60?v+‘m’:v/60+‘h’}</option>`).join('')}</select> <select onchange="updF('${p.id}','${t.id}','recurrence',this.value)" style="font-size:10px;background:transparent;border:none;color:var(--ink3);cursor:pointer;padding:0;font-family:Inter,sans-serif"><option ${t.recurrence==='none'?'selected':''} value="none">Once</option><option ${t.recurrence==='daily'?'selected':''} value="daily">Daily &#8635;</option><option ${t.recurrence==='weekly'?'selected':''} value="weekly">Weekly &#8635;</option><option ${t.recurrence==='monthly'?'selected':''} value="monthly">Monthly &#8635;</option></select> <input type="date" value="${t.due||''}" onchange="updF('${p.id}','${t.id}','due',this.value)" style="font-size:10px;background:transparent;border:none;color:${isOD?'var(--tr2)':'var(--ink3)'};cursor:pointer;padding:0;font-family:Inter,sans-serif"> ${isOD?'<span class="sans" style="font-size:10px;color:var(--tr2);font-weight:600">overdue</span>':''} </div> ${tExp?`<div style="margin-top:7px;padding-left:10px;border-left:2px solid ${cat.soft}">${(t.subtasks||[]).map(s=>`<div style="display:flex;align-items:center;gap:5px;padding:3px 0"><button style="background:none;border:none;cursor:pointer;padding:0" onclick="toggleS('${p.id}','${t.id}','${s.id}')">${cb(s.done,true)}</button><span class="sans" style="font-size:12px;flex:1;${s.done?'text-decoration:line-through;color:var(--ink4)':'color:var(--ink2)'}">${s.text}</span><button onclick="delSub('${p.id}','${t.id}','${s.id}')" style="background:none;border:none;cursor:pointer;color:var(--ink4);font-size:11px">&#10005;</button></div>`).join(’’)}<div style="display:flex;gap:5px;margin-top:4px"><input id="si-${t.id}" placeholder="Add step..." style="flex:1;font-size:12px;padding:4px 7px" onkeydown="if(event.key==='Enter')addSub('${p.id}','${t.id}',this)"><button style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:16px" onclick="addSub('${p.id}','${t.id}',el('si-${t.id}'))">+</button></div></div>`:''} </div></div></div>`;}).join(’’):’’;
+return`<div class="card" style="border-left:4px solid ${cat.color};margin-bottom:10px"><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><button onclick="toggleP('${p.id}')" style="background:none;border:none;cursor:pointer;color:var(--ink3)">${p.expanded?'&#9660;':'&#9654;'}</button><button onclick="toggleP('${p.id}')" style="flex:1;background:none;border:none;cursor:pointer;text-align:left"><div class="row" style="gap:7px;margin-bottom:3px"><span style="font-size:1.1rem">${p.title}</span>${chip(cat.label,cat.color,cat.soft)}</div><div class="row" style="gap:8px"><span class="sans" style="font-size:10px;color:var(--ink4)">${done}/${p.tasks.length} &middot; ${pct}%</span><div style="height:3px;flex:1;max-width:120px;background:var(--bd);border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${cat.color}"></div></div></div></button><input type="date" value="${p.targetDate||''}" onchange="updTgt('${p.id}',this.value)" style="font-size:11px;width:auto;padding:4px 7px" title="Target date"><button onclick="delP('${p.id}')" style="background:none;border:none;cursor:pointer;color:var(--ink4);font-size:12px">&#128465;</button></div>${p.expanded?`<div style="margin-top:11px;padding-top:11px;border-top:1px solid var(--bd)">${tasks}<div style="display:flex;gap:6px;margin-top:9px;padding-top:9px;border-top:1px dashed var(--bd2)"><input id="nt-${p.id}" placeholder="Add a task..." style="flex:1;font-size:12px" onkeydown="if(event.key==='Enter')addTP('${p.id}',this)"><button class="btn" style="padding:7px 11px" onclick="addTP('${p.id}',el('nt-${p.id}'))">+</button></div></div>`:''}`;
+}).join(’’);}
+
+window._texp={};
+function toggleTExp(tid){window._texp[tid]=!window._texp[tid];rdProj();}
+
+function rdCap(){const e=el(‘cap-list’);if(!e)return;e.innerHTML=!S.quickCapture.length?’<div class="sans" style="font-size:12px;color:var(--ink4);font-style:italic">Nothing captured yet.</div>’:S.quickCapture.map(q=>`<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid #f5efe6"><div style="font-size:.9rem;flex:1;color:var(--ink2)">${q.text}</div><button onclick="remCap('${q.id}')" style="background:none;border:none;cursor:pointer;color:var(--ink4);font-size:12px">&#10005;</button></div>`).join(’’);}
+
+function rdWins(){const e=el(‘win-list’);if(!e)return;e.innerHTML=!S.wins.length?’<div class="sans" style="font-size:12px;color:var(--ink4);font-style:italic">Your wins will live here.</div>’:S.wins.map(w=>`<div style="display:flex;align-items:flex-start;gap:6px;padding:5px 0;border-bottom:1px solid #f5efe6"><span style="color:var(--tr);font-size:11px;margin-top:2px">&#10022;</span><div style="flex:1"><div style="font-size:.9rem;color:var(--ink2)">${w.text}</div><div class="sans" style="font-size:10px;color:var(--ink4)">${fmD(w.date)}</div></div><button onclick="remWin('${w.id}')" style="background:none;border:none;cursor:pointer;color:var(--ink4);font-size:12px">&#10005;</button></div>`).join(’’);}
+
+function rdBlk(){const e=el(‘blk-list’);if(!e)return;const catOpts=Object.entries(CATS).map(([k,c])=>`<option value="${k}">${c.label}</option>`).join(’’);const bc=el(‘bc’);if(bc&&!bc.innerHTML)bc.innerHTML=catOpts;e.innerHTML=!S.blocked.length?’<div class="sans" style="font-size:12px;color:var(--ink4);font-style:italic">Nothing blocked.</div>’:S.blocked.map(b=>{const cat=CATS[b.category];return`<div style="display:flex;align-items:flex-start;gap:6px;padding:5px 0;border-bottom:1px solid #f5efe6">${cat?chip(cat.label,cat.color,cat.soft):''}<div style="flex:1"><div style="font-size:.9rem;color:var(--ink2)">${b.text}</div>${b.owner?`<div class="sans" style="font-size:10px;color:var(--ink4)">waiting on ${b.owner}</div>`:''}</div><button onclick="remBlk('${b.id}')" style="background:none;border:none;cursor:pointer;color:var(--ink4);font-size:12px">&#10005;</button></div>`;}).join(’’);}
+
+function rdBooks(){
+const books=S.books||[];
+const tRev=books.reduce((a,b)=>a+(b.sales||[]).reduce((s,sl)=>s+(sl.qty*b.price),0),0);
+const tUnits=books.reduce((a,b)=>a+(b.sales||[]).reduce((s,sl)=>s+sl.qty,0),0);
+const tInv=books.reduce((a,b)=>a+(b.inventory||0),0);
+const low=books.filter(b=>b.inventory<=b.reorderAt);
+const bs=el(‘bk-stats’);
+if(bs)bs.innerHTML=[{n:’$’+tRev.toFixed(2),l:‘Revenue YTD’,c:‘var(–tr)’},{n:tUnits,l:‘Units Sold’,c:‘var(–pl)’},{n:tInv,l:‘On Hand’,c:‘var(–sg)’},{n:low.length,l:‘Low Stock’,c:low.length?‘var(–tr2)’:’#4a7a4a’}].map(x=>`<div class="card" style="text-align:center"><div style="font-size:1.9rem;color:${x.c};line-height:1">${x.n}</div><div class="sans" style="font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink3);margin-top:3px">${x.l}</div></div>`).join(’’);
+const bl=el(‘bk-low’);
+if(bl)bl.innerHTML=low.length?`<div class="card" style="border-left:3px solid var(--tr2);background:#fff8f6;margin-bottom:13px"><div class="lbl" style="color:var(--tr2);margin-bottom:7px">&#9888; Low Stock Alert</div>${low.map(b=>`<div class="sans" style="font-size:13px;color:var(--ink);padding:2px 0">${b.title} — <strong>${b.inventory} units</strong> left</div>`).join('')}</div>`:’’;
+const sb=el(‘sl-book’);
+if(sb){sb.innerHTML=’<option value="">Select book…</option>’+books.map(b=>`<option value="${b.id}">${b.title}</option>`).join(’’);}
+const tbody=el(‘bk-tbody’);
+if(tbody)tbody.innerHTML=books.map(b=>{const sold=(b.sales||[]).reduce((a,s)=>a+s.qty,0);const rev=(b.sales||[]).reduce((a,s)=>a+(s.qty*b.price),0);const isLow=b.inventory<=b.reorderAt;const isAct=activeBook===b.id;return`<tr onclick="toggleBookHist('${b.id}')" style="cursor:pointer;background:${isAct?'#faf5f0':'transparent'}"><td><div style="font-family:'Cormorant Garamond',serif;font-size:.95rem;color:var(--ink)">${b.title}</div></td><td style="color:var(--ink3)">${b.format}</td><td>$${b.price.toFixed(2)}</td><td><div style="display:flex;align-items:center;gap:7px"><span style="font-size:12px;color:${isLow?'var(--tr2)':'var(--ink)'};font-weight:${isLow?600:400}">${b.inventory}</span><button onclick="event.stopPropagation();restockBook('${b.id}')" class="sans" style="font-size:10px;color:var(--ink3);background:none;border:1px solid var(--bd2);border-radius:2px;cursor:pointer;padding:2px 6px">Restock</button></div></td><td style="color:var(--pl);font-weight:600">${sold}</td><td style="color:var(--tr);font-weight:600">$${rev.toFixed(2)}</td><td>${chip(isLow?'Reorder':'OK',isLow?'var(--tr2)':'#4a7a4a',isLow?'rgba(160,58,31,.1)':'rgba(74,122,74,.1)')}</td><td><button onclick="event.stopPropagation();delBook('${b.id}')" style="background:none;border:none;cursor:pointer;color:var(--ink4);font-size:12px">&#10005;</button></td></tr>`;}).join(’’);
+if(el(‘tot-inv’))el(‘tot-inv’).textContent=tInv+’ units’;
+if(el(‘tot-units’))el(‘tot-units’).textContent=tUnits;
+if(el(‘tot-rev’))el(‘tot-rev’).textContent=’$’+tRev.toFixed(2);
+}
+
+function toggleBookHist(bid){
+if(activeBook===bid){activeBook=null;hide(‘bk-hist’);return;}
+activeBook=bid;const b=(S.books||[]).find(x=>x.id===bid);if(!b)return;
+const ht=el(‘bk-hist-title’);if(ht)ht.textContent=‘Sales History - ‘+b.title;
+const hb=el(‘bk-hist-body’);
+if(hb)hb.innerHTML=!(b.sales||[]).length?’<div class="sans" style="font-size:12px;color:var(--ink4);font-style:italic">No sales logged yet.</div>’:[…(b.sales||[])].sort((a,z)=>z.date.localeCompare(a.date)).map(s=>`<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid #f0e8dc"><span class="sans" style="color:var(--ink4);width:75px;flex-shrink:0">${fmD(s.date)}</span><span class="sans" style="color:var(--pl);font-weight:600;width:28px">${s.qty}x</span><span class="sans" style="color:var(--tr);font-weight:600;width:60px">$${(s.qty*b.price).toFixed(2)}</span>${chip(s.channel,'var(--ink3)','rgba(107,93,79,.1)')}<span class="sans" style="color:var(--ink4);flex:1">${s.notes||''}</span></div>`).join(’’);
+show(‘bk-hist’);
+rdBooks();
+}
+
+function logSale(){const bid=el(‘sl-book’)?.value;const qty=parseInt(el(‘sl-qty’)?.value||1);if(!bid||!qty)return;const b=(S.books||[]).find(x=>x.id===bid);if(!b)return;b.sales=[…(b.sales||[]),{id:uid(),bookId:bid,qty,channel:el(‘sl-ch’)?.value||‘Direct’,date:el(‘sl-date’)?.value||td(),notes:el(‘sl-notes’)?.value||’’}];b.inventory=Math.max(0,(b.inventory||0)-qty);if(el(‘sl-book’))el(‘sl-book’).value=’’;if(el(‘sl-qty’))el(‘sl-qty’).value=1;if(el(‘sl-notes’))el(‘sl-notes’).value=’’;sv();rdBooks();}
+function restockBook(bid){const qty=prompt(‘How many copies to add?’);if(!qty||isNaN(qty))return;const b=(S.books||[]).find(x=>x.id===bid);if(b){b.inventory=(b.inventory||0)+parseInt(qty);sv();rdBooks();}}
+function toggleAddBook(){el(‘add-book-form’)?.classList.toggle(‘hidden’);}
+function doAddBook(){const t=el(‘nb-title’)?.value.trim();if(!t)return;(S.books=S.books||[]).push({id:uid(),title:t,format:el(‘nb-fmt’)?.value||‘Paperback’,price:parseFloat(el(‘nb-price’)?.value)||0,inventory:parseInt(el(‘nb-inv’)?.value)||0,reorderAt:5,sales:[]});el(‘nb-title’).value=’’;hide(‘add-book-form’);sv();rdBooks();}
+function delBook(bid){if(!confirm(‘Remove this book?’))return;S.books=(S.books||[]).filter(x=>x.id!==bid);sv();rdBooks();}
+
+function updateGenBtn(){const b=el(‘cs-brand’)?.value;const btn=el(‘gen-btn’);if(!btn)return;btn.style.background=b===‘plb’?’#b8512f’:b===‘ain’?’#6b4a7a’:b===‘ncbw’?’#8a6b2f’:’#2a1f17’;}
+
+async function genContent(){
+const brand=el(‘cs-brand’)?.value||‘ain’,plat=el(‘cs-plat’)?.value||‘instagram’,type=el(‘cs-type’)?.value||‘ain-showcase’,tone=el(‘cs-tone’)?.value||‘warm’,topic=el(‘cs-topic’)?.value||’’,extra=el(‘cs-extra’)?.value||’’;
+const btn=el(‘gen-btn’);if(!btn)return;btn.disabled=true;btn.textContent=‘Writing…’;show(‘cs-loading’);
+const res=el(‘cs-results’);if(res)res.innerHTML=’’;
+const tLine=topic.trim()?`Topic: "${topic}"`:  `Today is ${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}. Choose a timely angle.`;
+const brands=brand===‘both’?[‘ain’,‘plb’]:[brand];
+for(const b of brands){
+if(el(‘cs-lmsg’))el(‘cs-lmsg’).textContent=‘Writing ‘+(CATS[b]?.label||b)+’ post…’;
+try{
+const resp=await fetch(‘https://api.anthropic.com/v1/messages’,{method:‘POST’,headers:{‘Content-Type’:‘application/json’},body:JSON.stringify({model:‘claude-sonnet-4-20250514’,max_tokens:500,messages:[{role:‘user’,content:`You are ghostwriting for Meko, founder of:\n${BRANDS[b]||BRANDS.ain}\n\nWrite one ${PLATS[plat]||'social post'} for Meko to publish today.\nContent type: ${type}\nTone: ${tone}\n${tLine}${extra.trim()?'\nAlso include: '+extra:''}\n\nRules:\n1. Write as Meko in first person\n2. Do NOT start with the word I\n3. Sound real and human, not AI\n4. 1-2 natural emojis woven in\n5. Write ONLY the post - no labels, no preamble\n\nWrite now:`}]})});
+const data=await resp.json();
+const text=(data.content||[]).map(c=>c.text||’’).join(’’).trim();
+const cat=CATS[b];
+if(res)res.innerHTML+=`<div class="card" style="border-left:4px solid ${cat?.color};margin-bottom:14px"><div class="rb" style="margin-bottom:11px"><div><div class="lbl" style="color:${cat?.color};margin-bottom:2px">&#10022; ${cat?.label}</div><div class="sans" style="font-size:10px;color:var(--ink4)">${plat} &middot; ${type} &middot; ${tone}</div></div><div class="row" style="gap:6px"><button class="btn bg bsm" onclick="cpPost(this)">Copy</button><button class="btn bsm" onclick="svPost('${b}',this.closest('.card').querySelector('textarea').value)">Save</button><button class="btn bg bsm" style="color:${cat?.color};border-color:${cat?.color}" onclick="genContent()">&#8634; Redo</button></div></div><textarea rows="7" style="font-family:'Cormorant Garamond',serif;font-size:15px;line-height:1.7;width:100%;border:1px solid ${cat?.color}44">${text}</textarea></div>`;
+}catch(e){if(res)res.innerHTML+=’<div class="card" style="border-left:3px solid var(--tr2);margin-bottom:14px;padding:14px"><div class="sans" style="font-size:12px;color:var(--tr2)">Connection error. This feature works inside Claude chat. Tap Redo to try again.</div></div>’;}
+}
+hide(‘cs-loading’);btn.disabled=false;btn.textContent=’✦ Create Again’;rdSavedPosts();
+}
+
+function cpPost(btn){const ta=btn.closest(’.card’)?.querySelector(‘textarea’);if(!ta)return;navigator.clipboard?.writeText(ta.value).catch(()=>{ta.select();document.execCommand(‘copy’)});btn.textContent=‘Copied!’;setTimeout(()=>btn.textContent=‘Copy’,2000);}
+function svPost(brand,txt){if(!txt?.trim())return;S.savedPosts=[{id:uid(),brand,platform:el(‘cs-plat’)?.value||’’,text:txt.trim(),date:td()},…(S.savedPosts||[])];sv();rdSavedPosts();}
+function cpSaved(btn){const id=btn.dataset.id;const p=(S.savedPosts||[]).find(x=>x.id===id);if(p)navigator.clipboard?.writeText(p.text).catch(()=>{});btn.textContent=‘Copied!’;setTimeout(()=>btn.textContent=‘Copy’,2000);}
+
+function rdSavedPosts(){const sl=el(‘sp-list’);const sc=el(‘sp-count’);const posts=S.savedPosts||[];if(sc)sc.textContent=posts.length+’ saved’;if(!sl)return;if(!posts.length){sl.innerHTML=’<div class="sans" style="font-size:12px;color:var(--ink4);font-style:italic">Posts you save will appear here.</div>’;return;}sl.innerHTML=posts.slice(0,8).map(p=>{const cat=CATS[p.brand];const preview=p.text.slice(0,120)+(p.text.length>120?’…’:’’);return’<div style="display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid #f5efe6">’+(cat?chip(cat.label,cat.color,cat.soft):’’)+’<div style="flex:1;min-width:0"><div style="font-family:Cormorant Garamond,serif;font-size:13px;color:var(--ink2);line-height:1.4">’+preview+’</div><div class="sans" style="font-size:10px;color:var(--ink4);margin-top:2px">’+fmD(p.date)+’ · ‘+p.platform+’</div></div><button class="btn bg bsm" data-id="'+p.id+'" onclick="cpSaved(this)">Copy</button></div>’;}).join(’’);}
+
+function rdPlan(){
+const avail=(S.hours||4)*60;const pool=[…overT(),…dueT()].filter(t=>!t.done);let used=0;const planned=[],overflow=[];
+pool.forEach(t=>{const e=t.estimate||30;if(used+e<=avail){planned.push(t);used+=e;}else overflow.push(t);});
+const rem=avail-used;
+const ps=el(‘plan-stats’);if(ps)ps.innerHTML=[{n:planned.length,l:‘Tasks fit’,c:‘var(–pl)’},{n:fmtM(used),l:‘Scheduled’,c:‘var(–tr)’},{n:fmtM(Math.abs(rem)),l:rem>=0?‘Room left’:‘Over budget’,c:rem>=0?‘var(–sg)’:‘var(–tr2)’}].map(x=>`<div class="card" style="text-align:center"><div style="font-size:1.9rem;color:${x.c}">${x.n}</div><div class="sans" style="font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink3);margin-top:3px">${x.l}</div></div>`).join(’’);
+const pl=el(‘plan-list’);if(pl)pl.innerHTML=!planned.length?’<div class="sans" style="font-size:12px;color:var(--ink4);font-style:italic">Nothing due or overdue. Add task due dates in Projects.</div>’:planned.map((t,i)=>{const cat=CATS[t.category];return`<div style="display:flex;align-items:center;gap:9px;padding:10px;background:var(--cr);border-radius:3px;margin-bottom:6px"><div style="font-size:1.35rem;color:var(--ink4);width:22px">${i+1}</div><button style="background:none;border:none;cursor:pointer;padding:0" onclick="toggleT('${t.pid}','${t.id}')">${cb(t.done)}</button><div style="flex:1"><div style="font-size:.9rem">${t.text}</div><div class="row" style="margin-top:3px">${cat?chip(cat.label,cat.color,cat.soft):''}<span class="sans" style="font-size:10px;color:var(--ink4)">&#9201; ${t.estimate||30}m</span></div></div></div>`;}).join(’’);
+const po=el(‘plan-overflow’);if(po)po.innerHTML=!overflow.length?’’:’<div class="card" style="border-left:3px solid var(--tr2)"><div style="font-size:1.15rem;margin-bottom:5px">Won't fit today</div><div class="sans" style="font-size:11px;color:var(--ink4);margin-bottom:9px">Defer or cut these.</div>’+overflow.map(t=>{const cat=CATS[t.category];return`<div style="display:flex;align-items:center;gap:7px;padding:6px 0;border-bottom:1px solid #f5efe6">${cat?chip(cat.label,cat.color,cat.soft):''}<span style="font-size:.9rem;flex:1;color:var(--ink2)">${t.text}</span><span class="sans" style="font-size:10px;color:var(--ink4)">${t.estimate||30}m</span><button class="btn bg bsm" onclick="defer('${t.pid}','${t.id}')">&#9657; Tomorrow</button></div>`;}).join(’’)+’</div>’;
+const hs=el(‘hrs’);if(hs)hs.value=S.hours||4;
+}
+
+function rdTimeline(){
+const weeks=12,total=84;const start=td();
+const tw=el(‘tl-weeks’);if(tw){tw.style.gridTemplateColumns=`repeat(${weeks},1fr)`;tw.innerHTML=Array.from({length:weeks},(_,i)=>`<div class="sans" style="font-size:9px;color:var(--ink4);border-left:1px solid var(--bd);padding-left:3px;text-align:center">${fmD(addD(start,i*7))}</div>`).join(’’);}
+const tr=el(‘tl-rows’);if(!tr)return;
+const vis=S.projects.filter(p=>p.targetDate||p.tasks.some(t=>t.due&&!t.done));
+if(!vis.length){tr.innerHTML=’<div class="sans" style="font-size:12px;color:var(--ink4);font-style:italic;padding:20px 0">No projects with dates yet.</div>’;return;}
+tr.innerHTML=vis.map(p=>{const cat=CATS[p.category];const dues=p.tasks.filter(t=>t.due&&!t.done).map(t=>t.due).sort();const earliest=dues[0]||start;const latest=p.targetDate||(dues.length?dues[dues.length-1]:addD(start,14));const sd=Math.max(0,dB(start,earliest)||0);const ed=Math.min(total,(dB(start,latest)||0)+1);const left=(sd/total*100).toFixed(1);const width=Math.max(2,((ed-sd)/total*100)).toFixed(1);return`<div style="display:flex;align-items:center;margin-bottom:9px;height:34px"><div style="width:170px;flex-shrink:0;padding-right:9px;display:flex;align-items:center;gap:5px;overflow:hidden"><div style="width:7px;height:7px;border-radius:50%;background:${cat?.color};flex-shrink:0"></div><span style="font-size:.82rem;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${p.title}</span></div><div style="flex:1;position:relative;height:34px;background:var(--cr);border-radius:2px;overflow:hidden">${Array.from({length:weeks},(_,i)=>`<div style="position:absolute;left:${(i/weeks*100).toFixed(1)}%;top:0;bottom:0;width:1px;background:var(--bd)"></div>`).join('')}<div style="position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--tr);z-index:2"></div><div style="position:absolute;left:${left}%;width:${width}%;top:5px;height:22px;border-radius:11px;background:${cat?.color};display:flex;align-items:center;padding:0 7px;font-family:Inter,sans-serif;font-size:9px;font-weight:600;color:white;overflow:hidden;white-space:nowrap;min-width:4px">${fmD(earliest)}${latest!==earliest?' &rarr; '+fmD(latest):''}</div></div></div>`;}).join(’’);}
+
+let curView=‘home’;
+function goView(v){
+curView=v;
+[‘home’,‘content’,‘books’,‘plan’,‘timeline’].forEach(n=>{const ve=el(‘v-’+n);const te=el(‘t-’+n);if(ve)n===v?ve.classList.remove(‘hidden’):ve.classList.add(‘hidden’);if(te)n===v?te.classList.add(‘on’):te.classList.remove(‘on’);});
+if(v===‘plan’)rdPlan();
+if(v===‘timeline’)rdTimeline();
+if(v===‘books’){rdBooks();const d=el(‘sl-date’);if(d&&!d.value)d.value=td();}
+if(v===‘content’){const cd=el(‘cs-date’);if(cd)cd.textContent=new Date().toLocaleDateString(‘en-US’,{weekday:‘long’,month:‘long’,day:‘numeric’,year:‘numeric’});rdSavedPosts();updateGenBtn();}
+}
+
+document.addEventListener(‘DOMContentLoaded’,function(){
+load();
+activeFilter=S.activeFilter||null;
+const catOpts=Object.entries(CATS).map(([k,c])=>`<option value="${k}">${c.label}</option>`).join(’’);
+[‘np-cat’,‘bc’].forEach(id=>{const e=el(id);if(e)e.innerHTML=catOpts;});
+rdHome();
+rdSavedPosts();
+const sd=el(‘sl-date’);if(sd)sd.value=td();
+if(S.dismissedMorningFor!==td())setTimeout(openMorning,350);
+});
+</script>
+
+</body>
+</html>
